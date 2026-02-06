@@ -240,9 +240,20 @@
 
         audioFileInput.addEventListener('change', function (e) {
             if (e.target.files.length > 0) {
-                const fileName = e.target.files[0].name;
-                fileNameDisplay.textContent = `Selected: ${fileName}`;
+                const file = e.target.files[0];
+                const fileName = file.name;
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2); // Convert to MB
+
+                fileNameDisplay.textContent = `Selected: ${fileName} (${fileSize} MB)`;
                 fileLabel.textContent = '✓ File Selected';
+
+                // Warn if file is too large
+                if (file.size > 100 * 1024 * 1024) { // 100 MB
+                    fileNameDisplay.textContent += ' ⚠️ File may be too large (max recommended: 100MB)';
+                    fileNameDisplay.style.color = '#d9534f';
+                } else {
+                    fileNameDisplay.style.color = '#666';
+                }
             } else {
                 fileNameDisplay.textContent = '';
                 fileLabel.textContent = '📁 Choose Audio File';
@@ -275,9 +286,20 @@
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
+            // Debug logging
+            console.log('=== UPLOAD STARTED ===');
+            console.log('Webhook URL:', WEBHOOK_URL);
+            console.log('Audio File:', audioFile.name, audioFile.size, 'bytes', audioFile.type);
+            console.log('Language:', language);
+            console.log('FormData entries:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ':', pair[1]);
+            }
+
             try {
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     body: formData
                 });
 
